@@ -204,7 +204,6 @@ class View
     bool wireframeEnabled = false;
 
     std::vector<Action> actions;
-    std::vector<GestureRecognizer*> gestureRecognizers;
 
     /**
      * Parent user data, typically the index of the view
@@ -251,6 +250,8 @@ class View
     std::unordered_map<FocusDirection, View*> customFocusByPtr;
 
   protected:
+    std::vector<GestureRecognizer*> gestureRecognizers;
+    
     float collapseState = 1.0f;
 
     bool focused = false;

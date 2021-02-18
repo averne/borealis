@@ -64,59 +64,17 @@ ScrollingFrame::ScrollingFrame()
             { "natural", ScrollingBehavior::NATURAL },
             { "centered", ScrollingBehavior::CENTERED },
         });
+    
+    BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
+        "axis", ScrollingAxis, this->setScrollingAxis,
+        {
+            { "horizontal", ScrollingAxis::HORIZONTAL },
+            { "vertical", ScrollingAxis::VERTICAL },
+        });
 
     this->setMaximumAllowedXMLElements(1);
 
-    addGestureRecognizer(new PanGestureRecognizer([this](PanGestureRecognizer* pan)
-    {
-        float contentHeight = this->getContentHeight();
-
-        static float startY;
-        if (pan->getState() == GestureState::START) 
-            startY = this->scrollY * contentHeight;
-
-        float newScroll = (startY - (pan->getY() - pan->getStartY())) / contentHeight;
-        float bottomLimit = (contentHeight - this->getScrollingAreaHeight()) / contentHeight;
-        
-        // Bottom boundary
-        if (newScroll > bottomLimit)
-            newScroll = bottomLimit;
-
-        // Top boundary
-        if (newScroll < 0.0f)
-            newScroll = 0.0f;
-
-        // Start animation
-        if (pan->getState() != GestureState::END)
-            startScrolling(true, newScroll);
-        else
-        {
-            float time = pan->getAcceleration().timeY * 1000.0f;
-            float newPos = this->scrollY * contentHeight + pan->getAcceleration().distanceY;
-            
-            // Bottom boundary
-            float bottomLimit = contentHeight - this->getScrollingAreaHeight();
-            if (newPos > bottomLimit)
-            {
-                time = time * (1 - fabs(newPos - bottomLimit) / fabs(pan->getAcceleration().distanceY));
-                newPos = bottomLimit;
-            }
-            
-            // Top boundary
-            if (newPos < 0)
-            {
-                time = time * (1 - fabs(newPos) / fabs(pan->getAcceleration().distanceY));
-                newPos = 0;
-            }
-            
-            newScroll = newPos / contentHeight;
-            
-            if (newScroll == this->scrollY || time < 100)
-                return;
-
-            animateScrolling(newScroll, time);
-        }
-    }, PanAxis::VERTICAL));
+    addTouchRecognizer();
 }
 
 void ScrollingFrame::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
@@ -129,7 +87,9 @@ void ScrollingFrame::draw(NVGcontext* vg, float x, float y, float width, float h
     nvgSave(vg);
     float scrollingTop    = this->getScrollingAreaTopBoundary();
     float scrollingHeight = this->getScrollingAreaHeight();
-    nvgIntersectScissor(vg, x, scrollingTop, this->getWidth(), scrollingHeight);
+    float scrollingLeft    = this->getScrollingAreaLeftBoundary();
+    float scrollingWidth = this->getScrollingAreaWidth();
+    nvgIntersectScissor(vg, scrollingLeft, scrollingTop, scrollingWidth, scrollingHeight);
 
     // Draw children
     Box::draw(vg, x, y, width, height, style, ctx);
@@ -164,7 +124,12 @@ void ScrollingFrame::setContentView(View* view)
 
     view->detach();
     view->setCulled(false);
-    view->setMaxWidth(this->getWidth());
+    
+    if (axis == ScrollingAxis::VERTICAL)
+        view->setMaxWidth(this->getWidth());
+    else
+        view->setMaxHeight(this->getHeight());
+    
     view->setDetachedPosition(this->getX(), this->getY());
 
     Box::addView(view); // will invalidate the scrolling box, hence calling onLayout and invalidating the contentView
@@ -174,7 +139,11 @@ void ScrollingFrame::onLayout()
 {
     if (this->contentView)
     {
-        this->contentView->setMaxWidth(this->getWidth());
+        if (axis == ScrollingAxis::VERTICAL)
+            this->contentView->setMaxWidth(this->getWidth());
+        else
+            this->contentView->setMaxHeight(this->getHeight());
+        
         this->contentView->setDetachedPosition(this->getX(), this->getY());
         this->contentView->invalidate();
     }
@@ -185,9 +154,19 @@ float ScrollingFrame::getScrollingAreaTopBoundary()
     return this->getY();
 }
 
+float ScrollingFrame::getScrollingAreaLeftBoundary()
+{
+    return this->getX();
+}
+
 float ScrollingFrame::getScrollingAreaHeight()
 {
     return this->getHeight();
+}
+
+float ScrollingFrame::getScrollingAreaWidth()
+{
+    return this->getWidth();
 }
 
 void ScrollingFrame::willAppear(bool resetState)
@@ -209,8 +188,14 @@ void ScrollingFrame::willAppear(bool resetState)
 void ScrollingFrame::prebakeScrolling()
 {
     // Prebaked values for scrolling
+    float x      = this->getScrollingAreaLeftBoundary();
+    float width = this->getScrollingAreaWidth();
+    
     float y      = this->getScrollingAreaTopBoundary();
     float height = this->getScrollingAreaHeight();
+    
+    this->middleX = x + width / 2;
+    this->bottomX = x + width;
 
     this->middleY = y + height / 2;
     this->bottomY = y + height;
@@ -218,7 +203,13 @@ void ScrollingFrame::prebakeScrolling()
 
 void ScrollingFrame::startScrolling(bool animated, float newScroll)
 {
-    if (newScroll == this->scrollY)
+    float* scroll;
+    if (axis == ScrollingAxis::VERTICAL)
+        scroll = &this->scrollY;
+    else
+        scroll = &this->scrollX;
+    
+    if (newScroll == *scroll)
         return;
 
     if (animated)
@@ -228,13 +219,12 @@ void ScrollingFrame::startScrolling(bool animated, float newScroll)
     }
     else
     {
-        menu_animation_ctx_tag tag = (menu_animation_ctx_tag) & this->scrollY;
+        menu_animation_ctx_tag tag = (menu_animation_ctx_tag) & *scroll;
         menu_animation_kill_by_tag(&tag);
         
-        this->scrollY = newScroll;
+        *scroll = newScroll;
         this->invalidate();
     }
-
 }
 
 void ScrollingFrame::animateScrolling(float newScroll, float time)
@@ -246,7 +236,7 @@ void ScrollingFrame::animateScrolling(float newScroll, float time)
     entry.cb           = [](void* userdata) {};
     entry.duration     = time;
     entry.easing_enum  = EASING_OUT_QUAD;
-    entry.subject      = &this->scrollY;
+    entry.subject      = axis == ScrollingAxis::VERTICAL ? &this->scrollY : &this->scrollX;
     entry.tag          = tag;
     entry.target_value = newScroll;
     entry.tick         = [this](void* userdata) { this->scrollAnimationTick(); };
@@ -262,6 +252,12 @@ void ScrollingFrame::setScrollingBehavior(ScrollingBehavior behavior)
     this->behavior = behavior;
 }
 
+void ScrollingFrame::setScrollingAxis(ScrollingAxis axis)
+{
+    this->axis = axis;
+    addTouchRecognizer();
+}
+
 float ScrollingFrame::getContentHeight()
 {
     if (!this->contentView)
@@ -270,10 +266,131 @@ float ScrollingFrame::getContentHeight()
     return this->contentView->getHeight();
 }
 
+float ScrollingFrame::getContentWidth()
+{
+    if (!this->contentView)
+        return 0;
+
+    return this->contentView->getWidth();
+}
+
 void ScrollingFrame::scrollAnimationTick()
 {
     if (this->contentView)
-        this->contentView->setTranslationY(-(this->scrollY * this->getContentHeight()));
+    {
+        if (axis == ScrollingAxis::VERTICAL)
+            this->contentView->setTranslationY(-(this->scrollY * this->getContentHeight()));
+        else
+            this->contentView->setTranslationX(-(this->scrollX * this->getContentWidth()));
+    }
+}
+
+void ScrollingFrame::addTouchRecognizer()
+{
+    this->gestureRecognizers.clear();
+    
+    if (axis == ScrollingAxis::VERTICAL)
+        addGestureRecognizer(new PanGestureRecognizer([this](PanGestureRecognizer* pan)
+        {
+            float contentHeight = this->getContentHeight();
+
+            static float startY;
+            if (pan->getState() == GestureState::START)
+                startY = this->scrollY * contentHeight;
+
+            float newScroll = (startY - (pan->getY() - pan->getStartY())) / contentHeight;
+            float bottomLimit = (contentHeight - this->getScrollingAreaHeight()) / contentHeight;
+            
+            // Bottom boundary
+            if (newScroll > bottomLimit)
+                newScroll = bottomLimit;
+
+            // Top boundary
+            if (newScroll < 0.0f)
+                newScroll = 0.0f;
+
+            // Start animation
+            if (pan->getState() != GestureState::END)
+                startScrolling(true, newScroll);
+            else
+            {
+                float time = pan->getAcceleration().timeY * 1000.0f;
+                float newPos = this->scrollY * contentHeight + pan->getAcceleration().distanceY;
+                
+                // Bottom boundary
+                float bottomLimit = contentHeight - this->getScrollingAreaHeight();
+                if (newPos > bottomLimit)
+                {
+                    time = time * (1 - fabs(newPos - bottomLimit) / fabs(pan->getAcceleration().distanceY));
+                    newPos = bottomLimit;
+                }
+                
+                // Top boundary
+                if (newPos < 0)
+                {
+                    time = time * (1 - fabs(newPos) / fabs(pan->getAcceleration().distanceY));
+                    newPos = 0;
+                }
+                
+                newScroll = newPos / contentHeight;
+                
+                if (newScroll == this->scrollY || time < 100)
+                    return;
+
+                animateScrolling(newScroll, time);
+            }
+        }, PanAxis::VERTICAL));
+    else
+        addGestureRecognizer(new PanGestureRecognizer([this](PanGestureRecognizer* pan)
+        {
+            float contentWidth = this->getContentWidth();
+
+            static float startX;
+            if (pan->getState() == GestureState::START)
+                startX = this->scrollX * contentWidth;
+
+            float newScroll = (startX - (pan->getX() - pan->getStartX())) / contentWidth;
+            float rightLimit = (contentWidth - this->getScrollingAreaWidth()) / contentWidth;
+            
+            // Bottom boundary
+            if (newScroll > rightLimit)
+                newScroll = rightLimit;
+
+            // Top boundary
+            if (newScroll < 0.0f)
+                newScroll = 0.0f;
+
+            // Start animation
+            if (pan->getState() != GestureState::END)
+                startScrolling(true, newScroll);
+            else
+            {
+                float time = pan->getAcceleration().timeX * 1000.0f;
+                float newPos = this->scrollX * contentWidth + pan->getAcceleration().distanceX;
+                
+                // Bottom boundary
+                float rightLimit = contentWidth - this->getScrollingAreaWidth();
+                if (newPos > rightLimit)
+                {
+                    time = time * (1 - fabs(newPos - rightLimit) / fabs(pan->getAcceleration().distanceX));
+                    newPos = rightLimit;
+                }
+                
+                // Top boundary
+                if (newPos < 0)
+                {
+                    time = time * (1 - fabs(newPos) / fabs(pan->getAcceleration().distanceX));
+                    newPos = 0;
+                }
+                
+                newScroll = newPos / contentWidth;
+                
+                if (newScroll == this->scrollX || time < 100)
+                    return;
+
+                animateScrolling(newScroll, time);
+            }
+        }, PanAxis::HORIZONTAL));
 }
 
 void ScrollingFrame::onChildFocusGained(View* directChild, View* focusedView)
@@ -290,25 +407,50 @@ bool ScrollingFrame::updateScrolling(bool animated)
     if (!this->contentView)
         return false;
 
-    float contentHeight = this->getContentHeight();
+    if (axis == ScrollingAxis::VERTICAL)
+    {
+        float contentHeight = this->getContentHeight();
 
-    View* focusedView                  = Application::getCurrentFocus();
-    int currentSelectionMiddleOnScreen = focusedView->getY() + focusedView->getHeight() / 2;
-    float newScroll                    = -(this->scrollY * contentHeight) - (currentSelectionMiddleOnScreen - this->middleY);
+        View* focusedView                  = Application::getCurrentFocus();
+        int currentSelectionMiddleOnScreen = focusedView->getY() + focusedView->getHeight() / 2;
+        float newScroll                    = -(this->scrollY * contentHeight) - (currentSelectionMiddleOnScreen - this->middleY);
 
-    // Bottom boundary
-    if (this->getScrollingAreaTopBoundary() + newScroll + contentHeight < this->bottomY)
-        newScroll = this->getScrollingAreaHeight() - contentHeight;
+        // Bottom boundary
+        if (this->getScrollingAreaTopBoundary() + newScroll + contentHeight < this->bottomY)
+            newScroll = this->getScrollingAreaHeight() - contentHeight;
 
-    // Top boundary
-    if (newScroll > 0.0f)
-        newScroll = 0.0f;
+        // Top boundary
+        if (newScroll > 0.0f)
+            newScroll = 0.0f;
 
-    // Apply 0.0f -> 1.0f scale
-    newScroll = abs(newScroll) / contentHeight;
+        // Apply 0.0f -> 1.0f scale
+        newScroll = abs(newScroll) / contentHeight;
 
-    //Start animation
-    this->startScrolling(animated, newScroll);
+        //Start animation
+        this->startScrolling(animated, newScroll);
+    }
+    else
+    {
+        float contentWidth = this->getContentWidth();
+
+        View* focusedView                  = Application::getCurrentFocus();
+        int currentSelectionMiddleOnScreen = focusedView->getX() + focusedView->getWidth() / 2;
+        float newScroll                    = -(this->scrollX * contentWidth) - (currentSelectionMiddleOnScreen - this->middleX);
+
+        // Bottom boundary
+        if (this->getScrollingAreaLeftBoundary() + newScroll + contentWidth < this->bottomX)
+            newScroll = this->getScrollingAreaWidth() - contentWidth;
+
+        // Top boundary
+        if (newScroll > 0.0f)
+            newScroll = 0.0f;
+
+        // Apply 0.0f -> 1.0f scale
+        newScroll = abs(newScroll) / contentWidth;
+
+        //Start animation
+        this->startScrolling(animated, newScroll);
+    }
 
     return true;
 }

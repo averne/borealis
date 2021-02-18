@@ -1043,22 +1043,16 @@ void View::invalidate()
 
 float View::getX()
 {
-    if (this->detached)
-        return this->detachedOriginX + this->translationX;
-    else if (this->hasParent())
+    if (this->hasParent())
         return this->getParent()->getX() + YGNodeLayoutGetLeft(this->ygNode) + this->translationX;
-    else
-        return YGNodeLayoutGetLeft(this->ygNode) + this->translationX;
+    return YGNodeLayoutGetLeft(this->ygNode) + this->translationX;
 }
 
 float View::getY()
 {
-    if (this->detached)
-        return this->detachedOriginY + this->translationY;
-    else if (this->hasParent())
+    if (this->hasParent())
         return this->getParent()->getY() + YGNodeLayoutGetTop(this->ygNode) + this->translationY;
-    else
-        return YGNodeLayoutGetTop(this->ygNode) + this->translationY;
+    return YGNodeLayoutGetTop(this->ygNode) + this->translationY;
 }
 
 float View::getHeight(bool includeCollapse)

@@ -33,6 +33,12 @@ enum class ScrollingBehavior
     CENTERED,
 };
 
+enum class ScrollingAxis
+{
+    VERTICAL,
+    HORIZONTAL,
+};
+
 // TODO: horizontal scrolling, add a scrolling direction attribute
 // TODO: Scrollbar
 
@@ -68,6 +74,12 @@ class ScrollingFrame : public Box
      * Default is NATURAL.
      */
     void setScrollingBehavior(ScrollingBehavior behavior);
+    
+    /**
+     * Sets the scrolling axis of this scrolling frame.
+     * Default is VERTICAL.
+     */
+    void setScrollingAxis(ScrollingAxis behavior);
 
     static View* create();
 
@@ -76,23 +88,32 @@ class ScrollingFrame : public Box
 
     bool updateScrollingOnNextFrame = false;
 
+    float middleX = 0; // x + width/2
+    float bottomX = 0; // x + width
+    
     float middleY = 0; // y + height/2
     float bottomY = 0; // y + height
 
-    float scrollY = 0.0f; // from 0.0f to 1.0f, in % of content view height
+    float scrollX = 0.0f; // from 0.0f to 1.0f, in % of content view height
+    float scrollY = 0.0f; // from 0.0f to 1.0f, in % of content view width
 
     void prebakeScrolling();
     bool updateScrolling(bool animated);
     void startScrolling(bool animated, float newScroll);
     void animateScrolling(float newScroll, float time);
     void scrollAnimationTick();
+    void addTouchRecognizer();
 
     float getScrollingAreaTopBoundary();
+    float getScrollingAreaLeftBoundary();
     float getScrollingAreaHeight();
+    float getScrollingAreaWidth();
 
     float getContentHeight();
+    float getContentWidth();
 
     ScrollingBehavior behavior = ScrollingBehavior::NATURAL;
+    ScrollingAxis axis = ScrollingAxis::VERTICAL;
 };
 
 } // namespace brls
