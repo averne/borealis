@@ -21,6 +21,106 @@
                     height="auto"
                     text="@i18n/demo/welcome"
                     marginBottom="10px" />
+                    
+                    
+                <brls:ScrollingFrame
+                    id="scroll"
+                    width="auto"
+                    height="170px"
+                    grow="1.0"
+                    axis="horizontal">
+                    
+                    <brls:Box
+                        width="auto"
+                        height="auto"
+                        axis="row"
+                        alignItems="center"
+                        justifyContent="spaceEvenly"
+                        marginBottom="30px">
+
+                        <CaptionedImage
+                            width="auto"
+                            height="auto"
+                            imageWidth="auto"
+                            imageHeight="auto"
+                            image="@res/icon/tiles.png"
+                            marginRight="30px"
+                            caption="@i18n/demo/components/images_downscaled" />
+
+                        <CaptionedImage
+                            width="auto"
+                            height="auto"
+                            imageWidth="auto"
+                            imageHeight="auto"
+                            image="@res/icon/tiles.png"
+                            marginRight="30px"
+                            caption="@i18n/demo/components/images_original" />
+
+                        <CaptionedImage
+                            width="auto"
+                            height="auto"
+                            imageWidth="auto"
+                            imageHeight="auto"
+                            image="@res/icon/tiles.png"
+                            marginRight="30px"
+                            caption="@i18n/demo/components/images_upscaled" />
+                            
+                        <CaptionedImage
+                            width="auto"
+                            height="auto"
+                            imageWidth="auto"
+                            imageHeight="auto"
+                            image="@res/icon/tiles.png"
+                            marginRight="30px"
+                            caption="@i18n/demo/components/images_downscaled" />
+
+                        <CaptionedImage
+                            width="auto"
+                            height="auto"
+                            imageWidth="auto"
+                            imageHeight="auto"
+                            image="@res/icon/tiles.png"
+                            marginRight="30px"
+                            caption="@i18n/demo/components/images_original" />
+
+                        <CaptionedImage
+                            width="auto"
+                            height="auto"
+                            imageWidth="auto"
+                            imageHeight="auto"
+                            image="@res/icon/tiles.png"
+                            marginRight="30px"
+                            caption="@i18n/demo/components/images_upscaled" />
+                        
+                        <CaptionedImage
+                            width="auto"
+                            height="auto"
+                            imageWidth="auto"
+                            imageHeight="auto"
+                            image="@res/icon/tiles.png"
+                            marginRight="30px"
+                            caption="@i18n/demo/components/images_downscaled" />
+
+                        <CaptionedImage
+                            width="auto"
+                            height="auto"
+                            imageWidth="auto"
+                            imageHeight="auto"
+                            image="@res/icon/tiles.png"
+                            marginRight="30px"
+                            caption="@i18n/demo/components/images_original" />
+
+                        <CaptionedImage
+                            width="auto"
+                            height="auto"
+                            imageWidth="auto"
+                            imageHeight="auto"
+                            image="@res/icon/tiles.png"
+                            caption="@i18n/demo/components/images_upscaled" />
+
+                    </brls:Box>
+                    
+                </brls:ScrollingFrame>
 
                 <!-- Buttons -->
                 <!-- TODO: image button somewhere -->
