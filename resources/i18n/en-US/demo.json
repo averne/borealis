@@ -3,6 +3,7 @@
 
     "tabs": {
         "components": "Basic components",
+        "sounds": "Sounds test",
         "scroll": "Scroll test",
         "layout": "Layout and alignment",
         "recycling": "Recycling lists",
@@ -15,6 +16,10 @@
     },
 
     "welcome": "Welcome to the borealis demo! Feel free to explore and discover what the library can do.",
+    
+    "sound_test": {
+        "play_sound": "Play"
+    },
 
     "components": {
         "buttons_header": "Buttons",

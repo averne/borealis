@@ -1,0 +1,30 @@
+<brls:Box
+    width="auto"
+    height="auto"
+    alignItems="center"
+    padding="200px">
+    
+    <brls:Box
+        width="auto"
+        height="auto"
+        axis="column"
+        alignItems="center">
+        
+        <brls:Label
+            id="sound_label"
+            width="auto"
+            height="auto"
+            textAlign="center"
+            marginBottom="60px" />
+            
+        <brls:Button
+            id="button_play_sound"
+            width="auto"
+            height="auto"
+            style="highlight"
+            text="@i18n/demo/sound_test/play_sound"
+            focusDown="button_bordered" />
+            
+    </brls:Box>
+    
+</brls:Box>

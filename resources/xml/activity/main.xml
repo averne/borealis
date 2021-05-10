@@ -8,6 +8,10 @@
         <ComponentsTab />
     </brls:Tab>
     
+    <brls:Tab label="@i18n/demo/tabs/sounds" >
+        <SoundTestTab />
+    </brls:Tab>
+    
     <brls:Tab label="@i18n/demo/tabs/scroll" >
         <brls:View xml="@res/xml/tabs/scroll_test.xml" />
     </brls:Tab>
