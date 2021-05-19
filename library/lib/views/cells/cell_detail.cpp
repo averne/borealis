@@ -43,7 +43,7 @@ const std::string detailCellXML = R"xml(
             width="auto"
             height="auto"
             fontSize="@style/brls/sidebar/item_font_size"
-            textColor="@theme/brls/list/listItemValueColor"/>
+            textColor="@theme/brls/list/listItem_value_color"/>
 
     </brls:Box>
 )xml";

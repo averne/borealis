@@ -23,7 +23,7 @@ namespace brls
 
 InputCell::InputCell()
 {
-    detail->setTextColor(Application::getTheme()["brls/list/listItemValueColor"]);
+    detail->setTextColor(Application::getTheme()["brls/list/listItem_value_color"]);
     
     this->registerClickAction([this](View* view) {
         Swkbd::openForText([&](std::string text) {
@@ -71,7 +71,7 @@ void InputCell::updateUI()
     else
     {
         this->detail->setText(value);
-        this->detail->setTextColor(theme["brls/list/listItemValueColor"]);
+        this->detail->setTextColor(theme["brls/list/listItem_value_color"]);
     }
 }
 
@@ -82,7 +82,7 @@ View* InputCell::create()
 
 InputNumericCell::InputNumericCell()
 {
-    detail->setTextColor(Application::getTheme()["brls/list/listItemValueColor"]);
+    detail->setTextColor(Application::getTheme()["brls/list/listItem_value_color"]);
     
     this->registerClickAction([this](View* view) {
         Swkbd::openForNumber([&](long number) {
@@ -116,7 +116,7 @@ void InputNumericCell::updateUI()
 {
     Theme theme = Application::getTheme();
     this->detail->setText(std::to_string(value));
-    this->detail->setTextColor(theme["brls/list/listItemValueColor"]);
+    this->detail->setTextColor(theme["brls/list/listItem_value_color"]);
 }
 
 View* InputNumericCell::create()

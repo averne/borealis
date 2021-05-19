@@ -66,7 +66,13 @@ static ThemeValues lightThemeValues = {
     { "brls/button/disabled_border_color", nvgRGB(45, 45, 45) },
 
     // List
-    { "brls/list/listItemValueColor", nvgRGB(43, 81, 226) },
+    { "brls/list/listItem_value_color", nvgRGB(43, 81, 226) },
+    
+    // Slider
+    { "brls/slider/pointer_color", nvgRGB(255, 255, 255) },
+    { "brls/slider/pointer_border_color", nvgRGB(200, 200, 200) },
+    { "brls/slider/line_filled", nvgRGB(50, 79, 241) },
+    { "brls/slider/line_empty", nvgRGB(140, 140, 140) },
 
 };
 
@@ -114,7 +120,13 @@ static ThemeValues darkThemeValues = {
     { "brls/button/disabled_border_color", nvgRGB(255, 255, 255) },
 
     // List
-    { "brls/list/listItemValueColor", nvgRGB(88, 195, 169) },
+    { "brls/list/listItem_value_color", nvgRGB(88, 195, 169) },
+    
+    // Slider
+    { "brls/slider/pointer_color", nvgRGB(80, 80, 80) },
+    { "brls/slider/pointer_border_color", nvgRGB(120, 120, 120) },
+    { "brls/slider/line_filled", nvgRGB(1, 255, 201) },
+    { "brls/slider/line_empty", nvgRGB(140, 140, 140) },
 };
 
 static Theme lightTheme(&lightThemeValues);

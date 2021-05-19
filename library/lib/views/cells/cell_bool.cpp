@@ -74,7 +74,7 @@ void BooleanCell::updateUI()
 {
     Theme theme = Application::getTheme();
     detail->setText(state ? "brls/hints/on"_i18n : "brls/hints/off"_i18n);
-    detail->setTextColor(state ? theme["brls/list/listItemValueColor"] : theme["brls/text_disabled"]);
+    detail->setTextColor(state ? theme["brls/list/listItem_value_color"] : theme["brls/text_disabled"]);
 }
 
 void BooleanCell::scaleTick()

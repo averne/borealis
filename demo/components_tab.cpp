@@ -30,6 +30,12 @@ ComponentsTab::ComponentsTab()
     brls::Button* highlightButton = (brls::Button*)this->getView("button_highlight");
     highlightButton->registerAction(
         "Honk", brls::BUTTON_A, [](brls::View* view) { return true; }, false, brls::SOUND_HONK);
+    
+    progress->setText(std::to_string((int)(slider->getProgress() * 100)));
+    slider->getProgressEvent()->subscribe([this](float progress)
+    {
+        this->progress->setText(std::to_string((int)(progress * 100)));
+    });
 }
 
 int selected = 0;

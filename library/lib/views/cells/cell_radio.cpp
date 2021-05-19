@@ -61,7 +61,7 @@ void CheckBox::draw(NVGcontext* vg, float x, float y, float width, float height,
     int thickness = roundf(radius * 0.10f);
 
     // Background
-    nvgFillColor(vg, a(ctx->theme["brls/list/listItemValueColor"]));
+    nvgFillColor(vg, a(ctx->theme["brls/list/listItem_value_color"]));
     nvgBeginPath(vg);
     nvgCircle(vg, centerX, centerY, radius);
     nvgFill(vg);
@@ -107,7 +107,7 @@ void RadioCell::setSelected(bool selected)
 
     this->selected = selected;
     this->checkbox->setVisibility(selected ? Visibility::VISIBLE : Visibility::GONE);
-    this->title->setTextColor(selected ? theme["brls/list/listItemValueColor"] : theme["brls/text"]);
+    this->title->setTextColor(selected ? theme["brls/list/listItem_value_color"] : theme["brls/text"]);
 }
 
 bool RadioCell::getSelected()

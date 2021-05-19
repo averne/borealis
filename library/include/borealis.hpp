@@ -55,6 +55,7 @@
 #include <borealis/views/scrolling_frame.hpp>
 #include <borealis/views/sidebar.hpp>
 #include <borealis/views/tab_frame.hpp>
+#include <borealis/views/slider.hpp>
 
 // Cells
 #include <borealis/views/cells/cell_radio.hpp>

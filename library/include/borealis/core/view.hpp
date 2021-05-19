@@ -721,6 +721,11 @@ class View
     {
         this->cornerRadius = radius;
     }
+    
+    inline float getCornerRadius()
+    {
+       return this->cornerRadius;
+    }
 
     /**
      * Sets the view shape shadow type.

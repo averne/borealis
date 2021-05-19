@@ -39,6 +39,7 @@
 #include <borealis/views/sidebar.hpp>
 #include <borealis/views/tab_frame.hpp>
 #include <borealis/views/hint.hpp>
+#include <borealis/views/slider.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -441,6 +442,7 @@ bool Application::handleAction(char button)
             {
                 if (action.actionListener(hintParent))
                 {
+                    setInputType(InputType::GAMEPAD);
                     if (button == BUTTON_A)
                         hintParent->playClickAnimation();
 
@@ -893,6 +895,7 @@ void Application::registerBuiltInXMLViews()
     Application::registerXMLView("brls:Button", Button::create);
     Application::registerXMLView("brls:CheckBox", CheckBox::create);
     Application::registerXMLView("brls:Hints", Hints::create);
+    Application::registerXMLView("brls:Slider", Slider::create);
     
     // Cells
     Application::registerXMLView("brls:RadioCell", RadioCell::create);
