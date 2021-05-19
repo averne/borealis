@@ -2,7 +2,9 @@
     "hints": {
         "ok": "OK",
         "back": "Back",
-        "exit": "Exit"
+        "exit": "Exit",
+        "on": "On",
+        "off": "Off"
     },
 
     "crash_frame": {

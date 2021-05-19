@@ -26,6 +26,7 @@ enum Sound
     SOUND_FOCUS_CHANGE, // played when the focus changes
     SOUND_FOCUS_ERROR, // played when the user wants to go somewhere impossible (while the highlight wiggles)
     SOUND_CLICK, // played when the click action runs
+    SOUND_BACK, // played when back action runs
     SOUND_FOCUS_SIDEBAR, // played when the focus changes to a sidebar item
     SOUND_CLICK_ERROR, // played when the user clicks a disabled button / a view focused with no click action
     SOUND_HONK, // honk

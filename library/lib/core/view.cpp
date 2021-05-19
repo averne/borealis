@@ -26,6 +26,7 @@
 #include <borealis/core/input.hpp>
 #include <borealis/core/util.hpp>
 #include <borealis/core/view.hpp>
+#include <borealis/views/applet_frame.hpp>
 
 using namespace brls::literals;
 
@@ -58,6 +59,14 @@ View::View()
     Style style = Application::getStyle();
 
     this->highlightCornerRadius = style["brls/highlight/corner_radius"];
+
+    this->registerStringXMLAttribute("title", [this](std::string value) {
+        this->setTitle(value);
+    });
+
+    this->registerFilePathXMLAttribute("icon", [this](std::string value) {
+        this->setIconFromFile(value);
+    });
 }
 
 static int shakeAnimation(float t, float a) // a = amplitude
@@ -360,7 +369,7 @@ void View::drawWireframe(FrameContext* ctx, Rect frame)
 void View::drawBorder(NVGcontext* vg, FrameContext* ctx, Style style, Rect frame)
 {
     nvgBeginPath(vg);
-    nvgStrokeColor(vg, this->borderColor);
+    nvgStrokeColor(vg, a(this->borderColor));
     nvgStrokeWidth(vg, this->borderThickness);
     nvgRoundedRect(vg, frame.getMinX(), frame.getMinY(), frame.getWidth(), frame.getHeight(), this->cornerRadius);
     nvgStroke(vg);
@@ -1062,6 +1071,21 @@ float View::getY()
     return YGNodeLayoutGetTop(this->ygNode) + this->translation.y;
 }
 
+Rect View::getLocalFrame()
+{
+    return Rect(getLocalX(), getLocalY(), getWidth(), getHeight());
+}
+
+float View::getLocalX()
+{
+    return YGNodeLayoutGetLeft(this->ygNode) + this->translation.x + (isDetached() ? this->detachedOrigin.x : 0);
+}
+
+float View::getLocalY()
+{
+    return YGNodeLayoutGetTop(this->ygNode) + this->translation.y + (isDetached() ? this->detachedOrigin.y : 0);
+}
+
 float View::getHeight(bool includeCollapse)
 {
     return YGNodeLayoutGetHeight(this->ygNode) * (includeCollapse ? this->collapseState.getValue() : 1.0f);
@@ -1295,6 +1319,11 @@ View::~View()
 
     for (GestureRecognizer* recognizer : this->gestureRecognizers)
         delete recognizer;
+
+    alpha.stop();
+    clickAlpha.stop();
+    highlightAlpha.stop();
+    collapseState.stop();
 }
 
 std::string View::getStringXMLAttributeValue(std::string value)
@@ -1538,6 +1567,15 @@ bool View::applyXMLAttribute(std::string name, std::string value)
     {
         return false;
     }
+}
+
+void View::setTitle(std::string title)
+{
+    this->title = title;
+
+    AppletFrame* appletFrame = this->getAppletFrame();
+    if (appletFrame)
+        appletFrame->setTitle(title);
 }
 
 void View::applyXMLAttributes(tinyxml2::XMLElement* element)
@@ -2093,6 +2131,43 @@ void View::setWireframeEnabled(bool wireframe)
 bool View::isWireframeEnabled()
 {
     return this->wireframeEnabled;
+}
+
+AppletFrame* View::getAppletFrame()
+{
+    View* view = this;
+    while (view)
+    {
+        AppletFrame* applet = dynamic_cast<AppletFrame*>(view);
+        if (applet)
+            return applet;
+
+        view = view->getParent();
+    }
+    return nullptr;
+}
+
+void View::present(View* view)
+{
+    AppletFrame* applet = getAppletFrame();
+    if (!applet)
+        return;
+
+    applet->pushContentView(view);
+}
+
+void View::dismiss()
+{
+    AppletFrame* applet = getAppletFrame();
+    if (!applet)
+        return;
+
+    applet->popContentView();
+}
+
+void View::freeView()
+{
+    Application::addToFreeQueue(this);
 }
 
 } // namespace brls

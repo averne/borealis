@@ -18,16 +18,16 @@
 
 // TODO: get real FPS
 // Uses to calculate time to play acceleration animation
-#define FPS 60.0f 
+#define FPS 60.0f
 
-// Delta from touch starting point to current, when 
+// Delta from touch starting point to current, when
 // touch will be recognized as pan movement
 #define MAX_DELTA_MOVEMENT 10
 
 // Touch history limit which uses to calculate current pan speed
 #define HISTORY_LIMIT 2
 
-// Negative acceleration to calculate 
+// Negative acceleration to calculate
 // time to play acceleration animation
 #define PAN_SCROLL_ACCELERATION -5000
 

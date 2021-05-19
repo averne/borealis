@@ -31,6 +31,7 @@ const std::string SOUNDS_MAP[_SOUND_MAX] = {
     "SeBtnFocus", // SOUND_FOCUS_CHANGE
     "SeKeyErrorCursor", // SOUND_FOCUS_ERROR
     "SeBtnDecide", // SOUND_CLICK
+    "SeFooterDecideFinish", // SOUND_BACK
     "SeNaviFocus", // SOUND_FOCUS_SIDEBAR
     "SeKeyError", // SOUND_CLICK_ERROR
     "SeUnlockKeyZR", // SOUND_HONK

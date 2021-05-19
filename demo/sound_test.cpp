@@ -79,8 +79,11 @@ SoundTestTab::SoundTestTab()
     });
 
     registerAction("Next sound", brls::BUTTON_RB, [this](brls::View* view) {
+        
+#ifdef __SWITCH__
         if (this->selectedSound < sizeof(sounds) / sizeof(sounds[0]) - 1)
             this->selectedSound++;
+#endif
 
         brls::Label* soundName = (brls::Label*)this->getView("sound_label");
         soundName->setText(soundsMap[this->selectedSound]);

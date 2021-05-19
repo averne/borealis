@@ -25,7 +25,7 @@ namespace brls
 
 static StyleValues styleValues = {
     // Animations
-    { "brls/animations/show", 250.0f },
+    { "brls/animations/show", 200.0f },
     { "brls/animations/show_slide", 125.0f },
 
     { "brls/animations/highlight", 100.0f },
@@ -101,6 +101,24 @@ static StyleValues styleValues = {
     { "brls/shadow/feather", 10.0f },
     { "brls/shadow/opacity", 63.75f },
     { "brls/shadow/offset", 10.0f },
+
+    // Dropdown
+    { "brls/dropdown/listPadding", 40.0f },
+    { "brls/dropdown/listItemHeight", 60.0f },
+    { "brls/dropdown/listItemTextSize", 20.0f },
+    
+    { "brls/dropdown/header_height", 70.0f },
+    { "brls/dropdown/header_title_font_size", 24.0f },
+
+    // ListItem
+    { "brls/listitem/descriptionIndent", 16.0f },
+    { "brls/listitem/indent", 40.0f },
+    { "brls/listitem/selectRadius", 15.0f },
+    
+    // Hints
+    { "brls/hints/footer_padding_sides", 55.0f },
+    { "brls/hints/footer_padding_top_bottom", 20.0f },
+    
 };
 
 static Style style(&styleValues);

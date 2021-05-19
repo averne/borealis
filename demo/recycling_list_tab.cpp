@@ -15,6 +15,9 @@
 */
 
 #include "recycling_list_tab.hpp"
+#include "pokemon_view.hpp"
+
+std::vector<Pokemon> pokemons;
 
 RecyclerCell::RecyclerCell()
 {
@@ -30,12 +33,12 @@ RecyclerCell* RecyclerCell::create()
 
 int DataSource::numberOfSections(brls::RecyclerFrame* recycler)
 {
-    return 3;
+    return 2;
 }
 
 int DataSource::numberOfRows(brls::RecyclerFrame* recycler, int section)
 {
-    return 10;
+    return pokemons.size();
 }
     
 std::string DataSource::titleForHeader(brls::RecyclerFrame* recycler, int section) 
@@ -48,15 +51,15 @@ std::string DataSource::titleForHeader(brls::RecyclerFrame* recycler, int sectio
 brls::RecyclerCell* DataSource::cellForRow(brls::RecyclerFrame* recycler, brls::IndexPath indexPath)
 {
     RecyclerCell* item = (RecyclerCell*)recycler->dequeueReusableCell("Cell");
-    item->label->setText("Item Section: " + std::to_string(indexPath.section) + ", Row: " + std::to_string(indexPath.row));
-    if (indexPath.row == 7)
-        item->label->setText("Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.");
+    item->label->setText(pokemons[indexPath.row].name);
+    item->image->setImageFromRes("img/pokemon/thumbnails/" + pokemons[indexPath.row].id + ".png");
     return item;
 }
 
-void DataSource::didSelectRowAt(brls::RecyclerFrame* recycler, brls::IndexPath index)
+void DataSource::didSelectRowAt(brls::RecyclerFrame* recycler, brls::IndexPath indexPath)
 {
-    brls::Logger::info("Item Index(" + std::to_string(index.section) + ":" + std::to_string(index.row) + ") selected.");
+//    brls::Logger::info("Item Index(" + std::to_string(index.section) + ":" + std::to_string(index.row) + ") selected.");
+    recycler->present(new PokemonView(pokemons[indexPath.row]));
 }
 
 // RECYCLER VIEW
@@ -65,9 +68,22 @@ RecyclingListTab::RecyclingListTab()
 {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/recycling_list.xml");
+    
+    pokemons.clear();
+    pokemons.push_back(Pokemon("001", "Bulbasaur"));
+    pokemons.push_back(Pokemon("004", "Charmander"));
+    pokemons.push_back(Pokemon("007", "Squirtle"));
+    pokemons.push_back(Pokemon("011", "Metapod"));
+    pokemons.push_back(Pokemon("014", "Kakuna"));
+    pokemons.push_back(Pokemon("017", "Pidgeotto"));
+    pokemons.push_back(Pokemon("021", "Spearow"));
+    pokemons.push_back(Pokemon("024", "Arbok"));
+    pokemons.push_back(Pokemon("027", "Sandshrew"));
 
+    recycler->estimatedRowHeight = 70;
     recycler->registerCell("Header", []() { return RecyclerHeader::create(); });
     recycler->registerCell("Cell", []() { return RecyclerCell::create(); });
+    recycler->setDefaultCellFocus(brls::IndexPath(1, 6));
     recycler->setDataSource(new DataSource());
 }
 

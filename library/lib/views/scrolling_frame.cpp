@@ -155,7 +155,6 @@ void ScrollingFrame::willAppear(bool resetState)
     // to the selected view if needed (only known then)
     if (resetState)
     {
-        this->startScrolling(false, 0.0f);
         this->updateScrollingOnNextFrame = true; // focus may have changed since
     }
 
@@ -248,13 +247,13 @@ void ScrollingFrame::scrollAnimationTick()
 
 void ScrollingFrame::onChildFocusGained(View* directChild, View* focusedView)
 {
+    Box::onChildFocusGained(directChild, focusedView);
+
     this->childFocused = true;
 
     // Start scrolling
     if (Application::getInputType() != InputType::TOUCH)
         this->updateScrolling(true);
-
-    Box::onChildFocusGained(directChild, focusedView);
 }
 
 void ScrollingFrame::onChildFocusLost(View* directChild, View* focusedView)
@@ -267,22 +266,30 @@ bool ScrollingFrame::updateScrolling(bool animated)
     if (!this->contentView || !this->childFocused)
         return false;
 
+    View* focusedView = getDefaultFocus();
+    float localY      = focusedView->getLocalY();
+    View* parent      = focusedView->getParent();
+
+    while (dynamic_cast<ScrollingFrame*>(parent->getParent()) == nullptr)
+    {
+        localY += parent->getLocalY();
+        parent = parent->getParent();
+    }
+
+    int currentSelectionMiddleOnScreen = localY + focusedView->getHeight() / 2;
+    float newScroll                    = currentSelectionMiddleOnScreen - this->getHeight() / 2;
+
     float contentHeight = this->getContentHeight();
+    float bottomLimit   = contentHeight - this->getScrollingAreaHeight();
 
-    View* focusedView                  = Application::getCurrentFocus();
-    int currentSelectionMiddleOnScreen = focusedView->getY() + focusedView->getHeight() / 2;
-    float newScroll                    = -this->contentOffsetY - (currentSelectionMiddleOnScreen - this->middleY);
+    if (newScroll < 0)
+        newScroll = 0;
 
-    // Bottom boundary
-    if (this->getScrollingAreaTopBoundary() + newScroll + contentHeight < this->bottomY)
-        newScroll = this->getScrollingAreaHeight() - contentHeight;
+    if (newScroll > bottomLimit)
+        newScroll = bottomLimit;
 
-    // Top boundary
-    if (newScroll > 0.0f)
-        newScroll = 0.0f;
-
-    // Apply scale
-    newScroll = abs(newScroll);
+    if (contentHeight <= getHeight())
+        newScroll = 0;
 
     //Start animation
     this->startScrolling(animated, newScroll);
@@ -292,7 +299,7 @@ bool ScrollingFrame::updateScrolling(bool animated)
 
 Rect ScrollingFrame::getVisibleFrame()
 {
-    Rect frame = getFrame();
+    Rect frame = getLocalFrame();
     frame.origin.y += this->contentOffsetY;
     return frame;
 }

@@ -1,18 +1,20 @@
 /*
-    Copyright 2019 WerWolv
-    Copyright 2019 p-sam
+    Borealis, a Nintendo Switch UI Library
+    Copyright (C) 2019  WerWolv
+    Copyright (C) 2019  p-sam
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-        http://www.apache.org/licenses/LICENSE-2.0
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <borealis/core/logger.hpp>
@@ -28,6 +30,7 @@ namespace brls
 {
 
 #ifdef __SWITCH__
+
 static SwkbdConfig createSwkbdBaseConfig(std::string headerText, std::string subText, int maxStringLength, std::string initialText)
 {
     SwkbdConfig config;
@@ -44,6 +47,48 @@ static SwkbdConfig createSwkbdBaseConfig(std::string headerText, std::string sub
 
     return config;
 }
+
+int getSwkbdKeyDisableBitmask(int borealis_key)
+{
+    // translate brls to Switch libnx values
+    int ret = 0;
+    if (borealis_key == brls::KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_NONE)
+        return 0;
+
+    if (borealis_key & brls::KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_SPACE)
+        // Disable space-bar
+        ret |= SwkbdKeyDisableBitmask_Space;
+
+    if (borealis_key & brls::KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_AT)
+        // Disable '@'.
+        ret |= SwkbdKeyDisableBitmask_At;
+
+    if (borealis_key & brls::KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_PERCENT)
+        // Disable '%'.
+        ret |= SwkbdKeyDisableBitmask_Percent;
+
+    if (borealis_key & brls::KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_FORWSLASH)
+        // Disable '/'.
+        ret |= SwkbdKeyDisableBitmask_ForwardSlash;
+
+    if (borealis_key & brls::KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_BACKSLASH)
+        // Disable '\'.
+        ret |= SwkbdKeyDisableBitmask_Backslash;
+
+    if (borealis_key & brls::KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_NUMBERS)
+        // Disable numbers.
+        ret |= SwkbdKeyDisableBitmask_Numbers;
+
+    if (borealis_key & brls::KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_DOWNLOADCODE)
+        // Used for swkbdConfigMakePresetDownloadCode.
+        ret |= SwkbdKeyDisableBitmask_DownloadCode;
+
+    if (borealis_key & brls::KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_USERNAME)
+        // Used for swkbdConfigMakePresetUserName. Disables '@', '%', and '\'.
+        ret |= SwkbdKeyDisableBitmask_UserName;
+
+    return ret;
+}
 #else
 static std::string terminalInput(std::string text)
 {
@@ -54,13 +99,13 @@ static std::string terminalInput(std::string text)
 }
 #endif
 
-bool Swkbd::openForText(std::function<void(std::string)> f, std::string headerText, std::string subText, int maxStringLength, std::string initialText)
+bool Swkbd::openForText(std::function<void(std::string)> f, std::string headerText, std::string subText, int maxStringLength, std::string initialText, int kbdDisableBitmask)
 {
 #ifdef __SWITCH__
     SwkbdConfig config = createSwkbdBaseConfig(headerText, subText, maxStringLength, initialText);
 
     swkbdConfigSetType(&config, SwkbdType_Normal);
-    swkbdConfigSetKeySetDisableBitmask(&config, SwkbdKeyDisableBitmask_At | SwkbdKeyDisableBitmask_Percent | SwkbdKeyDisableBitmask_ForwardSlash | SwkbdKeyDisableBitmask_Backslash);
+    swkbdConfigSetKeySetDisableBitmask(&config, getSwkbdKeyDisableBitmask(kbdDisableBitmask));
 
     char buffer[0x100];
 
@@ -82,7 +127,7 @@ bool Swkbd::openForText(std::function<void(std::string)> f, std::string headerTe
 #endif
 }
 
-bool Swkbd::openForNumber(std::function<void(int)> f, std::string headerText, std::string subText, int maxStringLength, std::string initialText, std::string leftButton, std::string rightButton)
+bool Swkbd::openForNumber(std::function<void(long)> f, std::string headerText, std::string subText, int maxStringLength, std::string initialText, std::string leftButton, std::string rightButton, int kbdDisableBitmask)
 {
 #ifdef __SWITCH__
     SwkbdConfig config = createSwkbdBaseConfig(headerText, subText, maxStringLength, initialText);
@@ -90,13 +135,13 @@ bool Swkbd::openForNumber(std::function<void(int)> f, std::string headerText, st
     swkbdConfigSetType(&config, SwkbdType_NumPad);
     swkbdConfigSetLeftOptionalSymbolKey(&config, leftButton.c_str());
     swkbdConfigSetRightOptionalSymbolKey(&config, rightButton.c_str());
-    swkbdConfigSetKeySetDisableBitmask(&config, SwkbdKeyDisableBitmask_At | SwkbdKeyDisableBitmask_Percent | SwkbdKeyDisableBitmask_ForwardSlash | SwkbdKeyDisableBitmask_Backslash);
+    swkbdConfigSetKeySetDisableBitmask(&config, getSwkbdKeyDisableBitmask(kbdDisableBitmask));
 
     char buffer[0x100];
 
     if (R_SUCCEEDED(swkbdShow(&config, buffer, 0x100)) && strcmp(buffer, "") != 0)
     {
-        f(std::stol(buffer));
+        f(std::stoll(buffer));
 
         swkbdClose(&config);
         return true;
@@ -110,7 +155,7 @@ bool Swkbd::openForNumber(std::function<void(int)> f, std::string headerText, st
 
     try
     {
-        f(stol(line));
+        f(stoll(line));
         return true;
     }
     catch (const std::exception& e)

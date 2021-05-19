@@ -16,6 +16,8 @@
 
 #include "components_tab.hpp"
 
+#include "pokemon_view.hpp"
+
 ComponentsTab::ComponentsTab()
 {
     // Inflate the tab from the XML file
@@ -28,10 +30,32 @@ ComponentsTab::ComponentsTab()
     brls::Button* highlightButton = (brls::Button*)this->getView("button_highlight");
     highlightButton->registerAction(
         "Honk", brls::BUTTON_A, [](brls::View* view) { return true; }, false, brls::SOUND_HONK);
+    
+    progress->setText(std::to_string((int)(slider->getProgress() * 100)));
+    slider->getProgressEvent()->subscribe([this](float progress)
+    {
+        this->progress->setText(std::to_string((int)(progress * 100)));
+    });
 }
 
+int selected = 0;
 bool ComponentsTab::onPrimaryButtonClicked(brls::View* view)
 {
+    //    brls::AppletFrame* frame = new brls::AppletFrame(PokemonView::create());
+    //    frame->setFooterVisibility(brls::Visibility::GONE);
+    //    brls::Application::pushActivity(new brls::Activity(frame));
+
+    brls::Dropdown* dropdown = new brls::Dropdown(
+        "Test", std::vector<std::string> { "Test 1", "Test 2", "Test 3", "Test 4", "Test 5", "Test 6", "Test 7", "Test 8", "Test 9", "Test 10", "Test 11", "Test 12", "Test 13" }, [](int _selected) {
+            selected = _selected;
+        },
+        selected);
+//    brls::Dropdown* dropdown = new brls::Dropdown(
+//        "Test", std::vector<std::string> { "Test 1", "Test 2", "Test 3" }, [](int _selected) {
+//            selected = _selected;
+//        },
+//        selected);
+    brls::Application::pushActivity(new brls::Activity(dropdown));
     brls::Logger::info("Clicked");
     return true;
 }

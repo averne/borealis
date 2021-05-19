@@ -14,7 +14,7 @@
             id="sound_label"
             width="auto"
             height="auto"
-            textAlign="center"
+            horizontalAlign="center"
             marginBottom="60px" />
             
         <brls:Button

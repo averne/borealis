@@ -94,8 +94,10 @@ class Application
     /**
       * Pops the last pushed activity from the stack
       * and gives focus back where it was before.
+      *
+      * return false if no actifity to pop.
       */
-    static void popActivity(
+    static bool popActivity(
         TransitionAnimation animation = TransitionAnimation::FADE, std::function<void(void)> cb = [] {});
 
     /**
@@ -174,6 +176,7 @@ class Application
 
     static GenericEvent* getGlobalFocusChangeEvent();
     static VoidEvent* getGlobalHintsUpdateEvent();
+    static Event<InputType>* getGlobalInputTypeChangeEvent();
 
     static View* getCurrentFocus();
 
@@ -198,6 +201,8 @@ class Application
      */
     static std::string getLocale();
 
+    static void addToFreeQueue(View* view);
+
     /**
      * Returns the current input type.
      */
@@ -218,6 +223,7 @@ class Application
 
     inline static std::vector<Activity*> activitiesStack;
     inline static std::vector<View*> focusStack;
+    inline static std::vector<View*> deletionPool;
 
     inline static unsigned windowWidth, windowHeight;
 
@@ -241,6 +247,7 @@ class Application
 
     inline static GenericEvent globalFocusChangeEvent;
     inline static VoidEvent globalHintsUpdateEvent;
+    inline static Event<InputType> globalInputTypeChangeEvent;
 
     inline static std::unordered_map<std::string, XMLViewCreator> xmlViewsRegister;
 

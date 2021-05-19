@@ -32,9 +32,26 @@ class Hint : public Box
 
   private:
     std::string getKeyIcon(ControllerButton button);
+    Action action;
 
     BRLS_BIND(Label, icon, "icon");
     BRLS_BIND(Label, hint, "hint");
+};
+
+class Hints : public Box
+{
+  public:
+    Hints();
+    ~Hints();
+    
+    static View* create();
+    
+  private:
+    void refillHints(View* focusView);
+    BRLS_BIND(Box, hints, "brls/hints");
+    
+    GenericEvent::Subscription hintSubscription;
+    static bool actionsSortFunc(Action a, Action b);
 };
 
 } // namespace brls

@@ -28,7 +28,9 @@
 
 #include "captioned_image.hpp"
 #include "components_tab.hpp"
+#include "settings_tab.hpp"
 #include "main_activity.hpp"
+#include "pokemon_view.hpp"
 #include "recycling_list_tab.hpp"
 #include "sound_test.hpp"
 
@@ -55,12 +57,14 @@ int main(int argc, char* argv[])
     brls::Application::createWindow("demo/title"_i18n);
 
     // Have the application register an action on every activity that will quit when you press BUTTON_START
-    brls::Application::setGlobalQuit(true);
+    brls::Application::setGlobalQuit(false);
 
     // Register custom views (including tabs, which are views)
     brls::Application::registerXMLView("CaptionedImage", CaptionedImage::create);
     brls::Application::registerXMLView("RecyclingListTab", RecyclingListTab::create);
     brls::Application::registerXMLView("ComponentsTab", ComponentsTab::create);
+    brls::Application::registerXMLView("PokemonView", PokemonView::create);
+    brls::Application::registerXMLView("SettingsTab", SettingsTab::create);
     brls::Application::registerXMLView("SoundTestTab", SoundTestTab::create);
 
     // Add custom values to the theme

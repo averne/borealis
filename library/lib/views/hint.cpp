@@ -16,9 +16,13 @@
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
+#include <borealis/core/touch/tap_gesture.hpp>
 #include <borealis/core/util.hpp>
+#include <borealis/core/i18n.hpp>
 #include <borealis/views/applet_frame.hpp>
 #include <borealis/views/hint.hpp>
+
+using namespace brls::literals;
 
 namespace brls
 {
@@ -45,18 +49,50 @@ const std::string hintXML = R"xml(
     </brls:Box>
 )xml";
 
+const std::string hintsXML = R"xml(
+<brls:Box
+    width="auto"
+    height="@style/brls/applet_frame/footer_height"
+    axis="row"
+    direction="rightToLeft"
+    paddingLeft="@style/brls/hints/footer_padding_sides"
+    paddingRight="@style/brls/hints/footer_padding_sides"
+    paddingTop="@style/brls/hints/footer_padding_top_bottom"
+    paddingBottom="@style/brls/hints/footer_padding_top_bottom"
+    lineColor="@theme/brls/applet_frame/separator"
+    lineTop="1px"
+    justifyContent="spaceBetween" >
+
+    <brls:Box
+        id="brls/hints"
+        width="auto"
+        height="auto"
+        axis="row"
+        direction="leftToRight" />
+
+    <brls:Rectangle
+        width="75px"
+        height="auto"
+        color="#FF00FF" />
+
+</brls:Box>
+)xml";
+
 Hint::Hint(Action action)
     : Box(Axis::ROW)
+    , action(action)
 {
     this->inflateFromXMLString(hintXML);
+    this->setFocusable(false);
 
     icon->setText(getKeyIcon(action.button));
     hint->setText(action.hintText);
 
     if (!action.available)
     {
-        icon->setTextColor(nvgRGB(80, 80, 80));
-        hint->setTextColor(nvgRGB(80, 80, 80));
+        Theme theme = Application::getTheme();
+        icon->setTextColor(theme["brls/text_disabled"]);
+        hint->setTextColor(theme["brls/text_disabled"]);
     }
 }
 
@@ -95,6 +131,90 @@ std::string Hint::getKeyIcon(ControllerButton button)
         default:
             return "\uE152";
     }
+}
+
+Hints::Hints()
+{
+    this->inflateFromXMLString(hintsXML);
+    
+    hintSubscription = Application::getGlobalFocusChangeEvent()->subscribe([this](View* view) {
+        refillHints(view);
+    });
+}
+
+Hints::~Hints()
+{
+    Application::getGlobalFocusChangeEvent()->unsubscribe(hintSubscription);
+}
+
+void Hints::refillHints(View* focusView)
+{
+    if (!focusView)
+        return;
+
+    hints->clearViews();
+
+    std::set<ControllerButton> addedButtons; // we only ever want one action per key
+    std::vector<Action> actions;
+
+    while (focusView != nullptr)
+    {
+        for (auto& action : focusView->getActions())
+        {
+            if (action.hidden)
+                continue;
+
+            if (addedButtons.find(action.button) != addedButtons.end())
+                continue;
+
+            addedButtons.insert(action.button);
+            actions.push_back(action);
+        }
+
+        focusView = focusView->getParent();
+    }
+
+    if (std::find(actions.begin(), actions.end(), BUTTON_A) == actions.end())
+    {
+        actions.push_back(Action { BUTTON_A, NULL, "brls/hints/ok"_i18n, false, false, Sound::SOUND_NONE, NULL });
+    }
+
+    // Sort the actions
+    std::stable_sort(actions.begin(), actions.end(), Hints::actionsSortFunc);
+
+    for (Action action : actions)
+    {
+        Hint* hint = new Hint(action);
+        hints->addView(hint);
+    }
+}
+
+bool Hints::actionsSortFunc(Action a, Action b)
+{
+    // From left to right:
+    //  - first +
+    //  - then all hints that are not B and A
+    //  - finally B and A
+
+    // + is before all others
+    if (a.button == BUTTON_START)
+        return true;
+
+    // A is after all others
+    if (b.button == BUTTON_A)
+        return true;
+
+    // B is after all others but A
+    if (b.button == BUTTON_B && a.button != BUTTON_A)
+        return true;
+
+    // Keep original order for the rest
+    return false;
+}
+
+View* Hints::create()
+{
+    return new Hints();
 }
 
 } // namespace brls

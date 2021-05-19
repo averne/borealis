@@ -16,9 +16,13 @@
     limitations under the License.
 */
 
+#include <borealis/core/application.hpp>
+#include <borealis/core/i18n.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/core/util.hpp>
 #include <borealis/views/tab_frame.hpp>
+
+using namespace brls::literals;
 
 const std::string tabFrameContentXML = R"xml(
     <brls:Box
@@ -42,8 +46,7 @@ namespace brls
 
 TabFrame::TabFrame()
 {
-    View* contentView = View::createFromXMLString(tabFrameContentXML);
-    this->setContentView(contentView);
+    this->inflateFromXMLString(tabFrameContentXML);
 }
 
 void TabFrame::addTab(std::string label, TabViewCreator creator)
@@ -53,12 +56,10 @@ void TabFrame::addTab(std::string label, TabViewCreator creator)
         if (!view->isFocused())
             return;
 
-        Box* contentView = (Box*)this->contentView;
-
         // Remove the existing tab if it exists
         if (this->activeTab)
         {
-            contentView->removeView(this->activeTab); // will call willDisappear and delete
+            this->removeView(this->activeTab); // will call willDisappear and delete
             this->activeTab = nullptr;
         }
 
@@ -69,9 +70,16 @@ void TabFrame::addTab(std::string label, TabViewCreator creator)
             return;
 
         newContent->setGrow(1.0f);
-        contentView->addView(newContent); // addView calls willAppear
+        this->addView(newContent); // addView calls willAppear
 
         this->activeTab = newContent;
+
+        newContent->registerAction(
+            "brls/hints/back"_i18n, BUTTON_B, [this](View* view) {
+                Application::giveFocus(this->sidebar);
+                return true;
+            },
+            false, SOUND_BACK);
     });
 }
 

@@ -33,10 +33,10 @@ enum class HorizontalAlign
 
 enum class VerticalAlign
 {
-  BASELINE,
-  TOP,
-  CENTER,
-  BOTTOM,
+    BASELINE,
+    TOP,
+    CENTER,
+    BOTTOM,
 };
 
 // Some text. The Label will automatically grow as much as possible.

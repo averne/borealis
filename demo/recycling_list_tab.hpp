@@ -30,7 +30,8 @@ class RecyclerCell
     RecyclerCell();
 
     BRLS_BIND(brls::Rectangle, accent, "brls/sidebar/item_accent");
-    BRLS_BIND(brls::Label, label, "brls/sidebar/item_label");
+    BRLS_BIND(brls::Label, label, "title");
+    BRLS_BIND(brls::Image, image, "image");
 
     static RecyclerCell* create();
 };

@@ -35,6 +35,7 @@ class Activity
 {
   public:
     Activity();
+    Activity(View* view);
     virtual ~Activity();
 
     /**
@@ -156,7 +157,8 @@ class Activity
     void setAlpha(float alpha);
 
   private:
-    View* contentView = nullptr;
+    View* constructorView = nullptr;
+    View* contentView     = nullptr;
 };
 
 } // namespace brls

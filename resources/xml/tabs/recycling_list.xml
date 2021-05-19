@@ -10,8 +10,6 @@
         paddingTop="@style/brls/sidebar/padding_top"
         paddingRight="@style/brls/sidebar/padding_right"
         paddingBottom="@style/brls/sidebar/padding_bottom"
-        paddingLeft="@style/brls/sidebar/padding_left">
-
-    </brls:RecyclerFrame>
+        paddingLeft="@style/brls/sidebar/padding_left"/>
 
 </brls:Box>

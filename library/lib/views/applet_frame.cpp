@@ -37,6 +37,7 @@ const std::string appletFrameXML = R"xml(
 
         <!-- Header -->
         <brls:Box
+            id="brls/applet_frame/header"
             width="auto"
             height="@style/brls/applet_frame/header_height"
             axis="row"
@@ -72,34 +73,8 @@ const std::string appletFrameXML = R"xml(
             Direction inverted so that the bottom left text can be
             set to visibility="gone" without affecting the hint
         -->
-        <brls:Box
-            width="auto"
-            height="@style/brls/applet_frame/footer_height"
-            axis="row"
-            direction="rightToLeft"
-            paddingLeft="@style/brls/applet_frame/footer_padding_sides"
-            paddingRight="@style/brls/applet_frame/footer_padding_sides"
-            paddingTop="@style/brls/applet_frame/footer_padding_top_bottom"
-            paddingBottom="@style/brls/applet_frame/footer_padding_top_bottom"
-            marginLeft="@style/brls/applet_frame/padding_sides"
-            marginRight="@style/brls/applet_frame/padding_sides"
-            lineColor="@theme/brls/applet_frame/separator"
-            lineTop="1px"
-            justifyContent="spaceBetween" >
-
-            <brls:Box
-                id="hints"
-                width="auto"
-                height="auto"
-                axis="row"
-                direction="leftToRight" />
-
-            <brls:Rectangle
-                width="75px"
-                height="auto"
-                color="#FF00FF" />
-
-        </brls:Box>
+        <brls:Hints
+            id="brls/applet_frame/footer"/>
 
     </brls:Box>
 )xml";
@@ -108,84 +83,36 @@ AppletFrame::AppletFrame()
 {
     this->inflateFromXMLString(appletFrameXML);
 
-    this->registerStringXMLAttribute("title", [this](std::string value) {
-        this->setTitle(value);
-    });
-
-    this->registerFilePathXMLAttribute("icon", [this](std::string value) {
-        this->setIconFromFile(value);
-    });
-
     this->forwardXMLAttribute("iconInterpolation", this->icon, "interpolation");
 
-    Application::getGlobalFocusChangeEvent()->subscribe([this](View* view) {
-        refillHints(view);
-    });
-}
-
-bool actionsSortFunc(Action a, Action b)
-{
-    // From left to right:
-    //  - first +
-    //  - then all hints that are not B and A
-    //  - finally B and A
-
-    // + is before all others
-    if (a.button == BUTTON_START)
-        return true;
-
-    // A is after all others
-    if (b.button == BUTTON_A)
-        return true;
-
-    // B is after all others but A
-    if (b.button == BUTTON_B && a.button != BUTTON_A)
-        return true;
-
-    // Keep original order for the rest
-    return false;
-}
-
-void AppletFrame::refillHints(View* focusView)
-{
-    if (!focusView)
-        return;
-
-    hints->clearViews();
-
-    std::set<ControllerButton> addedButtons; // we only ever want one action per key
-    std::vector<Action> actions;
-
-    while (focusView != nullptr)
-    {
-        for (auto& action : focusView->getActions())
+    BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
+        "style", HeaderStyle, this->setHeaderStyle,
         {
-            if (action.hidden)
-                continue;
+            { "regular", HeaderStyle::REGULAR },
+            { "popup", HeaderStyle::POPUP },
+        });
 
-            if (addedButtons.find(action.button) != addedButtons.end())
-                continue;
+    this->registerBoolXMLAttribute("headerHidden", [this](bool value) {
+        this->setHeaderVisibility(value ? Visibility::GONE : Visibility::VISIBLE);
+    });
 
-            addedButtons.insert(action.button);
-            actions.push_back(action);
-        }
+    this->registerBoolXMLAttribute("footerHidden", [this](bool value) {
+        this->setFooterVisibility(value ? Visibility::GONE : Visibility::VISIBLE);
+    });
 
-        focusView = focusView->getParent();
-    }
+    this->registerAction(
+        "brls/hints/back"_i18n, BUTTON_B, [this](View* view) {
+            this->contentViewStack.back()->dismiss();
+            return true;
+        },
+        false, SOUND_BACK);
+}
 
-    if (std::find(actions.begin(), actions.end(), BUTTON_A) == actions.end())
-    {
-        actions.push_back(Action { BUTTON_A, NULL, "brls/hints/ok"_i18n, false, false, Sound::SOUND_NONE, NULL });
-    }
-
-    // Sort the actions
-    std::stable_sort(actions.begin(), actions.end(), actionsSortFunc);
-
-    for (Action action : actions)
-    {
-        Hint* hint = new Hint(action);
-        hints->addView(hint);
-    }
+AppletFrame::AppletFrame(View* contentView)
+    : AppletFrame::AppletFrame()
+{
+    contentViewStack.push_back(contentView);
+    this->setContentView(contentView);
 }
 
 void AppletFrame::setIconFromRes(std::string name)
@@ -196,8 +123,25 @@ void AppletFrame::setIconFromRes(std::string name)
 
 void AppletFrame::setIconFromFile(std::string path)
 {
-    this->icon->setVisibility(Visibility::VISIBLE);
-    this->icon->setImageFromFile(path);
+    if (path.empty())
+    {
+        this->icon->setVisibility(Visibility::GONE);
+    }
+    else
+    {
+        this->icon->setVisibility(Visibility::VISIBLE);
+        this->icon->setImageFromFile(path);
+    }
+}
+
+void AppletFrame::setHeaderVisibility(Visibility visibility)
+{
+    header->setVisibility(visibility);
+}
+
+void AppletFrame::setFooterVisibility(Visibility visibility)
+{
+    footer->setVisibility(visibility);
 }
 
 void AppletFrame::setTitle(std::string title)
@@ -205,12 +149,38 @@ void AppletFrame::setTitle(std::string title)
     this->title->setText(title);
 }
 
+void AppletFrame::pushContentView(View* view)
+{
+    contentViewStack.push_back(view);
+    setContentView(view);
+    Application::giveFocus(view);
+}
+
+void AppletFrame::popContentView()
+{
+    if (contentViewStack.size() <= 1)
+    {
+        if (!Application::popActivity())
+            Application::quit();
+        return;
+    }
+
+    View* lastView = contentViewStack.back();
+    contentViewStack.pop_back();
+
+    View* newView = contentViewStack.back();
+    setContentView(newView);
+    Application::giveFocus(newView);
+
+    lastView->freeView();
+}
+
 void AppletFrame::setContentView(View* view)
 {
     if (this->contentView)
     {
         // Remove the node
-        this->removeView(this->contentView);
+        this->removeView(this->contentView, false);
         this->contentView = nullptr;
     }
 
@@ -223,6 +193,9 @@ void AppletFrame::setContentView(View* view)
     this->contentView->setGrow(1.0f);
 
     this->addView(this->contentView, 1);
+
+    this->setTitle(view->getTitle());
+    this->setIconFromFile(view->getIconFile());
 }
 
 void AppletFrame::handleXMLElement(tinyxml2::XMLElement* element)
@@ -231,7 +204,28 @@ void AppletFrame::handleXMLElement(tinyxml2::XMLElement* element)
         fatal("brls:AppletFrame can only have one child XML element");
 
     View* view = View::createFromXMLElement(element);
+    contentViewStack.push_back(view);
     this->setContentView(view);
+}
+
+void AppletFrame::setHeaderStyle(HeaderStyle style)
+{
+    this->style = style;
+
+    Style appStyle = Application::getStyle();
+    switch (style)
+    {
+        case HeaderStyle::REGULAR:
+            header->setHeight(appStyle["brls/applet_frame/header_height"]);
+            title->setFontSize(appStyle["brls/applet_frame/header_title_font_size"]);
+            break;
+        case HeaderStyle::POPUP:
+//            header->setHeight(appStyle["brls/applet_frame/dropdown_header_height"]);
+//            title->setFontSize(appStyle["brls/applet_frame/dropdown_header_title_font_size"]);
+            break;
+        default:
+            break;
+    }
 }
 
 View* AppletFrame::create()

@@ -27,6 +27,11 @@ Activity::Activity()
 {
 }
 
+Activity::Activity(View* view)
+    : constructorView(view)
+{
+}
+
 void Activity::setContentView(View* view)
 {
     if (this->contentView)
@@ -51,17 +56,12 @@ void Activity::resizeToFitWindow()
 
 View* Activity::createContentView()
 {
-    return nullptr;
+    return constructorView;
 }
 
 float Activity::getShowAnimationDuration(TransitionAnimation animation)
 {
-    Style style = Application::getStyle();
-
-    if (animation == TransitionAnimation::SLIDE_LEFT || animation == TransitionAnimation::SLIDE_RIGHT)
-        return style["brls/animations/show_slide"];
-
-    return style["brls/animations/show"];
+    return contentView->getShowAnimationDuration(animation);
 }
 
 void Activity::onWindowSizeChanged()
@@ -170,7 +170,7 @@ Activity::~Activity()
     {
         this->contentView->willDisappear();
 
-        delete this->contentView;
+        this->contentView->freeView();
         this->contentView = nullptr;
     }
 }

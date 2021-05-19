@@ -26,6 +26,7 @@ static ThemeValues lightThemeValues = {
     // Generic values
     { "brls/background", nvgRGB(235, 235, 235) },
     { "brls/text", nvgRGB(45, 45, 45) },
+    { "brls/text_disabled", nvgRGB(140, 140, 140) },
     { "brls/backdrop", nvgRGBA(0, 0, 0, 178) },
     { "brls/click_pulse", nvgRGBA(13, 182, 213, 38) }, // same as highlight color1 with different opacity
 
@@ -63,12 +64,23 @@ static ThemeValues lightThemeValues = {
 
     { "brls/button/enabled_border_color", nvgRGB(45, 45, 45) },
     { "brls/button/disabled_border_color", nvgRGB(45, 45, 45) },
+
+    // List
+    { "brls/list/listItem_value_color", nvgRGB(43, 81, 226) },
+    
+    // Slider
+    { "brls/slider/pointer_color", nvgRGB(255, 255, 255) },
+    { "brls/slider/pointer_border_color", nvgRGB(200, 200, 200) },
+    { "brls/slider/line_filled", nvgRGB(50, 79, 241) },
+    { "brls/slider/line_empty", nvgRGB(140, 140, 140) },
+
 };
 
 static ThemeValues darkThemeValues = {
     // Generic values
     { "brls/background", nvgRGB(45, 45, 45) },
     { "brls/text", nvgRGB(255, 255, 255) },
+    { "brls/text_disabled", nvgRGB(80, 80, 80) },
     { "brls/backdrop", nvgRGBA(0, 0, 0, 178) },
     { "brls/click_pulse", nvgRGBA(25, 138, 198, 38) }, // same as highlight color1 with different opacity
 
@@ -106,6 +118,15 @@ static ThemeValues darkThemeValues = {
 
     { "brls/button/enabled_border_color", nvgRGB(255, 255, 255) },
     { "brls/button/disabled_border_color", nvgRGB(255, 255, 255) },
+
+    // List
+    { "brls/list/listItem_value_color", nvgRGB(88, 195, 169) },
+    
+    // Slider
+    { "brls/slider/pointer_color", nvgRGB(80, 80, 80) },
+    { "brls/slider/pointer_border_color", nvgRGB(120, 120, 120) },
+    { "brls/slider/line_filled", nvgRGB(1, 255, 201) },
+    { "brls/slider/line_empty", nvgRGB(140, 140, 140) },
 };
 
 static Theme lightTheme(&lightThemeValues);

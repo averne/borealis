@@ -28,12 +28,18 @@
 #include <borealis/core/time.hpp>
 #include <borealis/core/util.hpp>
 #include <borealis/views/button.hpp>
+#include <borealis/views/cells/cell_radio.hpp>
+#include <borealis/views/cells/cell_bool.hpp>
+#include <borealis/views/cells/cell_selector.hpp>
+#include <borealis/views/cells/cell_input.hpp>
 #include <borealis/views/header.hpp>
 #include <borealis/views/image.hpp>
 #include <borealis/views/rectangle.hpp>
 #include <borealis/views/recycler.hpp>
 #include <borealis/views/sidebar.hpp>
 #include <borealis/views/tab_frame.hpp>
+#include <borealis/views/hint.hpp>
+#include <borealis/views/slider.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -252,6 +258,12 @@ bool Application::mainLoop()
     // Render
     Application::frame();
 
+    // Free views deletion pool
+    for (auto view : Application::deletionPool)
+        delete view;
+
+    Application::deletionPool.clear();
+
     return true;
 }
 
@@ -338,6 +350,7 @@ void Application::onControllerButtonPressed(enum ControllerButton button, bool r
     if (Application::blockInputsTokens != 0)
     {
         Logger::debug("{} button press blocked (tokens={})", button, Application::blockInputsTokens);
+        Application::getAudioPlayer()->play(Sound::SOUND_CLICK_ERROR);
         return;
     }
 
@@ -357,19 +370,22 @@ void Application::onControllerButtonPressed(enum ControllerButton button, bool r
     {
         case BUTTON_DOWN:
             Application::navigate(FocusDirection::DOWN);
-            break;
+            return;
         case BUTTON_UP:
             Application::navigate(FocusDirection::UP);
-            break;
+            return;
         case BUTTON_LEFT:
             Application::navigate(FocusDirection::LEFT);
-            break;
+            return;
         case BUTTON_RIGHT:
             Application::navigate(FocusDirection::RIGHT);
-            break;
+            return;
         default:
             break;
     }
+
+    // Only play the error sound if no action applied
+    Application::getAudioPlayer()->play(SOUND_CLICK_ERROR);
 }
 
 bool Application::setInputType(InputType type)
@@ -378,6 +394,7 @@ bool Application::setInputType(InputType type)
         return false;
 
     Application::inputType = type;
+    globalInputTypeChangeEvent.fire(type);
 
     if (type == InputType::GAMEPAD)
         Application::currentFocus->onFocusGained();
@@ -395,6 +412,12 @@ bool Application::handleAction(char button)
     // Dismiss if input type was changed
     if (button == BUTTON_A && setInputType(InputType::GAMEPAD))
         return false;
+
+    if (button == BUTTON_B && setInputType(InputType::GAMEPAD))
+    {
+        activitiesStack.back()->getContentView()->dismiss();
+        return true;
+    }
 
     if (Application::activitiesStack.empty())
         return false;
@@ -419,6 +442,7 @@ bool Application::handleAction(char button)
             {
                 if (action.actionListener(hintParent))
                 {
+                    setInputType(InputType::GAMEPAD);
                     if (button == BUTTON_A)
                         hintParent->playClickAnimation();
 
@@ -431,10 +455,6 @@ bool Application::handleAction(char button)
 
         hintParent = hintParent->getParent();
     }
-
-    // Only play the error sound if action is a click
-    if (button == BUTTON_A && consumedButtons.empty())
-        Application::getAudioPlayer()->play(SOUND_CLICK_ERROR);
 
     return !consumedButtons.empty();
 }
@@ -547,7 +567,7 @@ void Application::giveFocus(View* view)
     View* oldFocus = Application::currentFocus;
     View* newFocus = view ? view->getDefaultFocus() : nullptr;
 
-    if (oldFocus != newFocus)
+    if (oldFocus != newFocus && newFocus != NULL)
     {
         if (oldFocus)
             oldFocus->onFocusLost();
@@ -563,10 +583,10 @@ void Application::giveFocus(View* view)
     }
 }
 
-void Application::popActivity(TransitionAnimation animation, std::function<void(void)> cb)
+bool Application::popActivity(TransitionAnimation animation, std::function<void(void)> cb)
 {
     if (Application::activitiesStack.size() <= 1) // never pop the first activity
-        return;
+        return false;
 
     Application::blockInputs();
 
@@ -581,7 +601,6 @@ void Application::popActivity(TransitionAnimation animation, std::function<void(
     last->hide([last, animation, wait, cb] {
         last->setInFadeAnimation(false);
         Application::activitiesStack.pop_back();
-        delete last;
 
         // Animate the old activity once the new one
         // has ended its animation
@@ -592,15 +611,24 @@ void Application::popActivity(TransitionAnimation animation, std::function<void(
             if (newLast->isHidden())
             {
                 newLast->willAppear(false);
-                newLast->show(cb, true, newLast->getShowAnimationDuration(animation));
+                newLast->show([cb] {
+                    cb();
+                    Application::unblockInputs();
+                },
+                    true, newLast->getShowAnimationDuration(animation));
             }
             else
             {
                 cb();
+                Application::unblockInputs();
             }
         }
+        else
+        {
+            Application::unblockInputs();
+        }
 
-        Application::unblockInputs();
+        delete last;
     },
         true, last->getShowAnimationDuration(animation));
 
@@ -622,6 +650,7 @@ void Application::popActivity(TransitionAnimation animation, std::function<void(
         Application::giveFocus(newFocus);
         Application::focusStack.pop_back();
     }
+    return true;
 }
 
 void Application::pushActivity(Activity* activity, TransitionAnimation animation)
@@ -661,25 +690,23 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
                 true, activity->getShowAnimationDuration(animation));
         }
 
-        last->hide([animation, wait] {
-            Activity* newLast = Application::activitiesStack[Application::activitiesStack.size() - 1];
-            newLast->setInFadeAnimation(false);
+        last->hide([animation, wait, activity] {
+            activity->setInFadeAnimation(false);
 
             // Animate the new activity once the old one
             // has ended its animation
             if (wait)
-                newLast->show([] { Application::unblockInputs(); }, true, newLast->getShowAnimationDuration(animation));
+                activity->show([] { Application::unblockInputs(); }, true, activity->getShowAnimationDuration(animation));
         },
             true, last->getShowAnimationDuration(animation));
     }
 
     activity->resizeToFitWindow();
-
+    
+    activity->hide([] {}, false, NULL);
     if (!fadeOut)
         activity->show([] { Application::unblockInputs(); }, true, activity->getShowAnimationDuration(animation));
-    else
-        activity->setAlpha(0.0f);
-
+    
     // Focus
     if (Application::activitiesStack.size() > 0 && Application::currentFocus != nullptr)
     {
@@ -722,6 +749,11 @@ ThemeVariant Application::getThemeVariant()
 std::string Application::getLocale()
 {
     return Application::getPlatform()->getLocale();
+}
+
+void Application::addToFreeQueue(View* view)
+{
+    deletionPool.push_back(view);
 }
 
 bool Application::loadFontFromFile(std::string fontName, std::string filePath)
@@ -824,6 +856,11 @@ VoidEvent* Application::getGlobalHintsUpdateEvent()
     return &Application::globalHintsUpdateEvent;
 }
 
+Event<InputType>* Application::getGlobalInputTypeChangeEvent()
+{
+    return &Application::globalInputTypeChangeEvent;
+}
+
 int Application::getFont(std::string fontName)
 {
     if (Application::fontStash.count(fontName) == 0)
@@ -856,6 +893,16 @@ void Application::registerBuiltInXMLViews()
     Application::registerXMLView("brls:Image", Image::create);
     Application::registerXMLView("brls:Padding", Padding::create);
     Application::registerXMLView("brls:Button", Button::create);
+    Application::registerXMLView("brls:CheckBox", CheckBox::create);
+    Application::registerXMLView("brls:Hints", Hints::create);
+    Application::registerXMLView("brls:Slider", Slider::create);
+    
+    // Cells
+    Application::registerXMLView("brls:RadioCell", RadioCell::create);
+    Application::registerXMLView("brls:BooleanCell", BooleanCell::create);
+    Application::registerXMLView("brls:SelectorCell", SelectorCell::create);
+    Application::registerXMLView("brls:InputCell", InputCell::create);
+    Application::registerXMLView("brls:InputNumericCell", InputNumericCell::create);
 }
 
 void Application::registerXMLView(std::string name, XMLViewCreator creator)

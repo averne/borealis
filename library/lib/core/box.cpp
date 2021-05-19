@@ -228,11 +228,11 @@ void Box::clearViews()
     for (size_t i = 0; i < views.size(); i++)
     {
         View* view = this->children.back();
-        
+
         // Remove it
         YGNodeRemoveChild(this->ygNode, view->getYGNode());
         this->children.pop_back();
-        
+
         view->willDisappear(true);
         delete view;
     }
@@ -612,10 +612,9 @@ void Box::forwardXMLAttribute(std::string attributeName, View* target, std::stri
 
 void Box::onChildFocusGained(View* directChild, View* focusedView)
 {
+    lastFocusedView = focusedView;
     if (this->hasParent())
         this->getParent()->onChildFocusGained(this, focusedView);
-
-    lastFocusedView = focusedView;
 }
 
 void Box::onChildFocusLost(View* directChild, View* focusedView)
@@ -641,6 +640,14 @@ void Padding::draw(NVGcontext* vg, float x, float y, float width, float height, 
 View* Padding::create()
 {
     return new Padding();
+}
+
+Box::~Box()
+{
+    for (auto it : getChildren())
+    {
+        delete it;
+    }
 }
 
 } // namespace brls

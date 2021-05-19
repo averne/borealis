@@ -78,9 +78,9 @@ void Ticking::stop(bool finished)
 
     this->running = false;
 
-    this->endCallback(finished);
-
     this->onStop();
+
+    this->endCallback(finished);
 }
 
 void Ticking::setEndCallback(TickingEndCallback endCallback)

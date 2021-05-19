@@ -20,19 +20,65 @@
 
 #include <borealis/core/bind.hpp>
 #include <borealis/core/box.hpp>
+#include <borealis/core/event.hpp>
 #include <borealis/views/image.hpp>
 #include <borealis/views/label.hpp>
+#include <borealis/views/hint.hpp>
 
 namespace brls
 {
+
+enum class HeaderStyle
+{
+    REGULAR,
+    POPUP
+};
 
 // A Horizon settings-like frame, with header and footer (no sidebar)
 class AppletFrame : public Box
 {
   public:
     AppletFrame();
+    AppletFrame(View* contentView);
 
     void handleXMLElement(tinyxml2::XMLElement* element) override;
+
+    void pushContentView(View* view);
+    void popContentView();
+
+    void setTitle(std::string title);
+
+    void setIconFromRes(std::string name);
+    void setIconFromFile(std::string path);
+
+    void setHeaderVisibility(Visibility visibility);
+    void setFooterVisibility(Visibility visibility);
+
+    void setHeaderStyle(HeaderStyle style);
+
+    Box* getHeader()
+    {
+        return header;
+    }
+
+    Box* getFooter()
+    {
+        return footer;
+    }
+
+    static View* create();
+
+  private:
+    BRLS_BIND(Box, header, "brls/applet_frame/header");
+    BRLS_BIND(Hints, footer, "brls/applet_frame/footer");
+    BRLS_BIND(Label, title, "brls/applet_frame/title_label");
+    BRLS_BIND(Image, icon, "brls/applet_frame/title_icon");
+
+    HeaderStyle style = HeaderStyle::REGULAR;
+
+  protected:
+    std::vector<View*> contentViewStack;
+    View* contentView = nullptr;
 
     /**
      * Sets the content view for that AppletFrame.
@@ -40,23 +86,6 @@ class AppletFrame : public Box
      * and width / height to AUTO.
      */
     void setContentView(View* view);
-
-    void setTitle(std::string title);
-
-    void setIconFromRes(std::string name);
-    void setIconFromFile(std::string path);
-
-    static View* create();
-
-  private:
-    void refillHints(View* focusView);
-
-    BRLS_BIND(Label, title, "brls/applet_frame/title_label");
-    BRLS_BIND(Image, icon, "brls/applet_frame/title_icon");
-    BRLS_BIND(Box, hints, "hints");
-
-  protected:
-    View* contentView = nullptr;
 };
 
 } // namespace brls
