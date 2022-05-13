@@ -46,6 +46,8 @@ TapGestureRecognizer::TapGestureRecognizer(View* view, TapGestureConfig config)
                         if (action.actionListener(view))
                             *soundToPlay = action.sound;
                         break;
+                    default:
+                        break;
                 }
             }
         }
@@ -71,6 +73,8 @@ TapGestureRecognizer::TapGestureRecognizer(View* view, std::function<void()> res
             case GestureState::END:
                 *soundToPlay = config.endSound;
                 respond();
+                break;
+            default:
                 break;
         }
     });

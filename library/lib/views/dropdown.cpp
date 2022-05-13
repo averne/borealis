@@ -64,7 +64,7 @@ const std::string dropdownFrameXML = R"xml(
                         fontSize="@style/brls/dropdown/header_title_font_size" />
 
                 </brls:Box>
-            
+
                 <brls:Box
                     width="auto"
                     height="auto"
@@ -72,7 +72,7 @@ const std::string dropdownFrameXML = R"xml(
                     grow="1"
                     justifyContent="center"
                     alignItems="stretch">
-                    
+
                     <brls:RecyclerFrame
                         id="brls/dropdown/recycler"
                         width="100%"
@@ -102,10 +102,10 @@ float min(float a, float b)
 }
 
 Dropdown::Dropdown(std::string title, std::vector<std::string> values, ValueSelectedEvent::Callback cb, int selected, ValueSelectedEvent::Callback dismissCb)
-    : values(values)
-    , cb(cb)
-    , selected(selected)
+    : cb(cb)
     , dismissCb(dismissCb)
+    , values(values)
+    , selected(selected)
 {
     this->inflateFromXMLString(dropdownFrameXML);
     this->title->setText(title);
@@ -140,7 +140,7 @@ RecyclerCell* Dropdown::cellForRow(RecyclerFrame* recycler, IndexPath index)
 {
     RadioCell* cell = (RadioCell*)recycler->dequeueReusableCell("Cell");
     cell->title->setText(values[index.row]);
-    cell->setSelected(index.row == selected);
+    cell->setSelected(size_t(index.row) == selected);
     return cell;
 }
 

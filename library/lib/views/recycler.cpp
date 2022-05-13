@@ -324,7 +324,7 @@ void RecyclerFrame::selectRowAt(IndexPath indexPath, bool animated)
 
     for (View* view : contentBox->getChildren())
     {
-        if (*((size_t*)view->getParentUserData()) == count - 1)
+        if (*((size_t*)view->getParentUserData()) == size_t(count) - 1)
         {
             contentBox->setLastFocusedView(view);
             break;
@@ -470,10 +470,10 @@ void RecyclerFrame::addCellAt(int index, int downSide)
     this->contentBox->invalidate();
     cell->View::willAppear();
 
-    if (index < visibleMin)
+    if (uint32_t(index) < visibleMin)
         visibleMin = index;
 
-    if (index > visibleMax)
+    if (uint32_t(index) > visibleMax)
         visibleMax = index;
 
     Rect cellFrame = cell->getFrame();

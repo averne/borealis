@@ -113,6 +113,8 @@ class RecyclerFrame;
 class RecyclerDataSource
 {
   public:
+    virtual ~RecyclerDataSource() = default;
+
     /*
      * Asks the data source to return the number of sections in the recycler frame.
      */

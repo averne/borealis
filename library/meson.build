@@ -35,6 +35,7 @@ borealis_files = files(
 
     'lib/platforms/switch/swkbd.cpp',
 
+    'lib/views/h_scrolling_frame.cpp',
     'lib/views/scrolling_frame.cpp',
     'lib/views/applet_frame.cpp',
     'lib/views/tab_frame.cpp',
@@ -59,6 +60,7 @@ borealis_files = files(
     'lib/views/cells/cell_radio.cpp',
     'lib/views/cells/cell_selector.cpp',
 
+    'lib/views/widgets/account.cpp',
     'lib/views/widgets/battery.cpp',
     'lib/views/widgets/wireless.cpp',
 
